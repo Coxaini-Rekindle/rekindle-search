@@ -8,19 +8,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5"/>
+        <PackageReference Include="rekindle.exceptions.api" Version="1.1.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Rekindle.Search.Application\Rekindle.Search.Application.csproj" />
-      <ProjectReference Include="..\Rekindle.Search.Domain\Rekindle.Search.Domain.csproj" />
-      <ProjectReference Include="..\Rekindle.Search.Infrastructure\Rekindle.Search.Infrastructure.csproj" />
+        <ProjectReference Include="..\Rekindle.Search.Application\Rekindle.Search.Application.csproj"/>
+        <ProjectReference Include="..\Rekindle.Search.Domain\Rekindle.Search.Domain.csproj"/>
+        <ProjectReference Include="..\Rekindle.Search.Infrastructure\Rekindle.Search.Infrastructure.csproj"/>
     </ItemGroup>
 
 </Project>
