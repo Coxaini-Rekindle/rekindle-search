@@ -5,6 +5,7 @@ using OllamaSharp;
 using Qdrant.Client;
 using Rekindle.Search.Application.Common.Interfaces;
 using Rekindle.Search.Application.Common.Repositories;
+using Rekindle.Search.Application.Images.Interfaces;
 using Rekindle.Search.Application.Storage.Interfaces;
 using Rekindle.Search.Infrastructure.Ai;
 using Rekindle.Search.Infrastructure.Messaging;
@@ -23,6 +24,10 @@ public static class DependencyInjection
         services.AddFileStorage(configuration);
         services.AddQdrantDatabase(configuration);
         services.AddAiServices(configuration);
+        services.AddHttpClient<IDeepFaceClient, DeepFaceClient>(client =>
+        {
+            client.BaseAddress = new Uri(configuration["DeepFaceApi:BaseUrl"] ?? "http://localhost:5000");
+        });
 
         return services;
     }

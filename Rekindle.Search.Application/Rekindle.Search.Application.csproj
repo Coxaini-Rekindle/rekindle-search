@@ -15,6 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Rekindle.Search.Contracts\Rekindle.Search.Contracts.csproj"/>
         <ProjectReference Include="..\Rekindle.Search.Domain\Rekindle.Search.Domain.csproj"/>
     </ItemGroup>
 

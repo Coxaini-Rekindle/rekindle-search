@@ -1,0 +1,37 @@
+name: Publish Contracts
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.x'
+
+      - name: Restore Contracts project dependencies
+        run: dotnet restore Rekindle.Search.Contracts/Rekindle.Search.Contracts.csproj
+
+      - name: Build Contracts project
+        run: dotnet build Rekindle.Search.Contracts/Rekindle.Search.Contracts.csproj --configuration Release --no-restore
+
+      - name: Pack Rekindle.Search.Contracts
+        run: dotnet pack Rekindle.Search.Contracts/Rekindle.Search.Contracts.csproj --configuration Release --no-build -o ./packages
+
+      - name: Publish to GitHub Packages
+        run: |
+          dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/Coxaini-Rekindle/index.json"
+          dotnet nuget push "./packages/*.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github" --skip-duplicate
+        env:
+          USERNAME: ${{ github.actor }}

@@ -7,19 +7,22 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0" />
-      <PackageReference Include="Microsoft.Extensions.AI" Version="9.5.0" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5" />
-      <PackageReference Include="OllamaSharp" Version="5.2.2" />
-      <PackageReference Include="Qdrant.Client" Version="1.14.0" />
-      <PackageReference Include="Rebus" Version="8.8.0" />
-      <PackageReference Include="Rebus.RabbitMq" Version="10.0.1" />
-      <PackageReference Include="Rebus.ServiceProvider" Version="10.3.0" />
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.24.0"/>
+        <PackageReference Include="Microsoft.Extensions.AI" Version="9.5.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.5"/>
+        <PackageReference Include="OllamaSharp" Version="5.2.2"/>
+        <PackageReference Include="Qdrant.Client" Version="1.14.0"/>
+        <PackageReference Include="Rebus" Version="8.8.0"/>
+        <PackageReference Include="Rebus.RabbitMq" Version="10.0.1"/>
+        <PackageReference Include="Rebus.ServiceProvider" Version="10.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Rekindle.Search.Application\Rekindle.Search.Application.csproj" />
+        <ProjectReference Include="..\Rekindle.Search.Application\Rekindle.Search.Application.csproj"/>
     </ItemGroup>
 
 </Project>

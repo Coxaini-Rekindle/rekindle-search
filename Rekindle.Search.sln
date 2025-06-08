@@ -11,7 +11,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{786C1395-05B0-4E24-A030-9CC60A1B8348}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
+		.github\workflows\publish-contracts.yml = .github\workflows\publish-contracts.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rekindle.Search.Contracts", "Rekindle.Search.Contracts\Rekindle.Search.Contracts.csproj", "{6902BEB1-365E-4DBB-B9F6-5BA09A0D13BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,5 +38,9 @@ Global
 		{98E943DA-68F8-4C1F-9446-400ACD444EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{98E943DA-68F8-4C1F-9446-400ACD444EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{98E943DA-68F8-4C1F-9446-400ACD444EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6902BEB1-365E-4DBB-B9F6-5BA09A0D13BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6902BEB1-365E-4DBB-B9F6-5BA09A0D13BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6902BEB1-365E-4DBB-B9F6-5BA09A0D13BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6902BEB1-365E-4DBB-B9F6-5BA09A0D13BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
