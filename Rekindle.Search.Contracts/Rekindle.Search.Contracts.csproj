@@ -8,7 +8,7 @@
         <Description>Contract classes for Rekindle Search microservice events</Description>
         <Authors>Rekindle</Authors>
         <PackageId>Rekindle.Search.Contracts</PackageId>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <PackageTags>rekindle;microservices;events;contracts;search</PackageTags>
     </PropertyGroup>
 
