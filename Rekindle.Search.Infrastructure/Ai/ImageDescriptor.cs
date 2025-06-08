@@ -10,10 +10,10 @@ public class ImageDescriptor : IImageDescriptor
     private readonly ILogger<ImageDescriptor> _logger;
 
     private const string Prompt =
-        "Describe this family photo in as much literal and visual detail as possible for use in a vector search system." +
-        " Include number of people, their apparent ages, genders, facial expressions, clothing, positions, actions," +
-        " interactions, visible emotions, setting or background, objects, and any visible text. Do not interpret—only" +
-        " describe what is visually present. Write all in one paragraph without line breaks or bullet points.";
+        "Describe this image with specific visual details for search. Include: people (count, ages, expressions, " +
+        "clothing), setting (indoor/outdoor, room type, lighting), background (walls, windows, scenery), objects " +
+        "(furniture, items, decorations), activities, colors, and any visible text. Be literal and specific. " +
+        "Do not describe anything that is not clearly visible in the image.";
 
     public ImageDescriptor(IChatClient chatClient, ILogger<ImageDescriptor> logger)
     {

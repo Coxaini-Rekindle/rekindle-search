@@ -26,7 +26,7 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
         {
             var photoData = new FamilyPhoto
             {
-                FileId = message.Id,
+                FileId = image.FileId,
                 Content = message.Content,
                 Title = message.Title,
                 GroupId = message.GroupId,

@@ -61,11 +61,12 @@ public class FamilyPhotosRepository : IFamilyPhotosRepository
             offset: offset,
             cancellationToken: cancellationToken);
 
-        return response.Where(point => point.Score > 0.3).Select(point => new FamilyPhoto
+        return response.Where(point => point.Score > 0.45).Select(point => new FamilyPhoto
         {
             FileId = Guid.Parse(point.Id.Uuid),
             GroupId = Guid.Parse(point.Payload["groupId"].StringValue),
             MemoryId = Guid.Parse(point.Payload["memoryId"].StringValue),
+            PostId = Guid.Parse(point.Payload["postId"].StringValue),
             Content = point.Payload["content"].StringValue,
             Title = point.Payload["title"].StringValue,
             PublisherUserId = Guid.Parse(point.Payload["userId"].StringValue),

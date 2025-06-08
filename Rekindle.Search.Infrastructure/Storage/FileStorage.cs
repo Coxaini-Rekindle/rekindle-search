@@ -37,7 +37,7 @@ public class FileStorage : IFileStorage
 
         var blobDownloadInfo = await blobClient.DownloadAsync(cancellationToken);
 
-        return new FileResponse(blobDownloadInfo.Value.Content, blobDownloadInfo.Value.Details.ContentType);
+        return new FileResponse(fileId, blobDownloadInfo.Value.Content, blobDownloadInfo.Value.Details.ContentType);
     }
 
     public async Task DeleteAsync(Guid fileId, CancellationToken cancellationToken = default)

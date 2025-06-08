@@ -10,17 +10,38 @@ public static class SearchEndpoints
             async (
                 Guid groupId,
                 string query,
-                int page,
-                ulong pageSize,
+                ulong limit,
+                ulong offset,
                 IImageSearchService searchService,
                 CancellationToken cancellationToken) =>
             {
-                var offset = (ulong)(page - 1) * pageSize;
-                var result = await searchService.SearchImagesAsync(
-                    groupId, query, pageSize, offset, cancellationToken);
-                return Results.Ok(result);
+                var results = (await searchService.SearchImagesAsync(
+                    groupId, query, limit, offset, cancellationToken)).ToList();
+
+                var groupResults = results
+                    .Select(f => new SearchResultDto(
+                        f.MemoryId,
+                        f.FileId,
+                        f.PostId,
+                        f.PublisherUserId,
+                        f.CreatedAt,
+                        f.Title,
+                        f.Content
+                    ));
+
+                return Results.Ok(groupResults);
             });
 
         return app;
     }
+
+    private record SearchResultDto(
+        Guid MemoryId,
+        Guid PhotoId,
+        Guid PostId,
+        Guid PublisherUserId,
+        DateTime CreatedAt,
+        string Title,
+        string Content
+    );
 }
