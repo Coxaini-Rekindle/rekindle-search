@@ -46,6 +46,7 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
                 {
                     PostId = message.PostId,
                     ImageId = image.FileId,
+                    GroupId = message.GroupId,
                     UserIds = faceAnalysis.Faces.Where(f => f.RecognitionType == FaceRecognitionType.Recognized)
                         .Select(f => Guid.Parse(f.PersonId)),
                     TempUserIds = faceAnalysis.Faces
