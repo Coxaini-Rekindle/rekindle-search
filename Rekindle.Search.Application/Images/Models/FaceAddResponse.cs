@@ -14,6 +14,7 @@ public class FaceResponse
 {
     public string PersonId { get; set; } = null!;
     public double Confidence { get; set; }
+    public string FaceImageBase64 { get; set; } = null!;
 
     [JsonConverter(typeof(FaceRecognitionTypeJsonConverter))]
     public FaceRecognitionType RecognitionType { get; set; }

@@ -6,6 +6,7 @@ using Rekindle.Search.Application.Common.Messaging;
 using Rekindle.Search.Application.Images.Interfaces;
 using Rekindle.Search.Application.Images.Models;
 using Rekindle.Search.Application.Storage.Interfaces;
+using Rekindle.Search.Application.Storage.Models;
 using Rekindle.Search.Contracts;
 using Rekindle.Search.Domain;
 
@@ -31,51 +32,127 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
 
     public async Task Handle(PostCreatedEvent message)
     {
-        var imageTasks = message.Images.Select(i => _fileStorage.GetAsync(i));
-        var images = await Task.WhenAll(imageTasks);
+        var images = await GetImagesAsync(message.Images);
 
-        foreach (var image in images)
+        var processingTasks = images.Select(image => ProcessImageAsync(message, image));
+        await Task.WhenAll(processingTasks);
+    }
+
+    private async Task<IEnumerable<FileResponse>> GetImagesAsync(IEnumerable<Guid> imageIds)
+    {
+        var imageTasks = imageIds.Select(id => _fileStorage.GetAsync(id));
+        return await Task.WhenAll(imageTasks);
+    }
+
+    private async Task ProcessImageAsync(PostCreatedEvent message, FileResponse image)
+    {
+        await ProcessFaceAnalysisAsync(message, image);
+        await SaveImageToSearchServiceAsync(message, image);
+    }
+
+    private async Task ProcessFaceAnalysisAsync(PostCreatedEvent message, FileResponse image)
+    {
+        try
+        {
+            var faceAnalysis = await _deepFaceClient.AddFacesFromImageAsync(
+                message.GroupId,
+                image.Stream);
+
+            if (faceAnalysis.Faces?.Any() != true)
+            {
+                _logger.LogInformation("No faces detected in image {ImageId} for post {PostId}",
+                    image.FileId, message.PostId);
+                return;
+            }
+
+            var faceAnalysisWithFiles = await ProcessDetectedFacesAsync(faceAnalysis.Faces);
+            await PublishFaceAnalysisEventAsync(message, image, faceAnalysisWithFiles);
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex, "Failed to analyze faces for post {PostId} in group {GroupId}, image {ImageId}",
+                message.PostId, message.GroupId, image.FileId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error during face analysis for post {PostId}, image {ImageId}",
+                message.PostId, image.FileId);
+        }
+    }
+
+    private async Task<List<(FaceResponse Face, Guid FileId)>> ProcessDetectedFacesAsync(
+        IEnumerable<FaceResponse> faces)
+    {
+        var faceAnalysisWithFiles = new List<(FaceResponse Face, Guid FileId)>();
+
+        foreach (var face in faces)
         {
             try
             {
-                var faceAnalysis = await _deepFaceClient.AddFacesFromImageAsync(
-                    message.GroupId,
-                    image.Stream);
+                var imageBytes = Convert.FromBase64String(face.FaceImageBase64);
+                using var stream = new MemoryStream(imageBytes);
 
-                await _eventPublisher.PublishAsync(new ImageFacesAnalyzedEvent
-                {
-                    PostId = message.PostId,
-                    ImageId = image.FileId,
-                    GroupId = message.GroupId,
-                    UserIds = faceAnalysis.Faces.Where(f => f.RecognitionType == FaceRecognitionType.Recognized)
-                        .Select(f => Guid.Parse(f.PersonId)),
-                    TempUserIds = faceAnalysis.Faces
-                        .Where(f => f.RecognitionType == FaceRecognitionType.TempUser)
-                        .Select(f => Guid.Parse(f.PersonId))
-                });
+                var fileId = await _fileStorage.UploadAsync(stream, "image/jpeg");
+                faceAnalysisWithFiles.Add((face, fileId));
             }
-            catch (HttpRequestException e)
+            catch (Exception ex)
             {
-                _logger.LogError(e, "Failed to analyze faces for post {PostId} in group {GroupId}",
-                    message.PostId, message.GroupId);
+                _logger.LogWarning(ex, "Failed to process face image for face recognition");
             }
-
-            var photoData = new FamilyPhoto
-            {
-                FileId = image.FileId,
-                Content = message.Content,
-                Title = message.Title,
-                GroupId = message.GroupId,
-                MemoryId = message.MemoryId,
-                PostId = message.PostId,
-                PublisherUserId = message.UserId,
-                CreatedAt = message.OccurredOn,
-            };
-
-            await _imageSearchService.SaveImageAsync(
-                photoData,
-                image.Stream,
-                image.ContentType);
         }
+
+        return faceAnalysisWithFiles;
+    }
+
+    private async Task PublishFaceAnalysisEventAsync(PostCreatedEvent message, FileResponse image,
+        List<(FaceResponse Face, Guid FileId)> faceAnalysisWithFiles)
+    {
+        var recognizedUsers = faceAnalysisWithFiles
+            .Where(f => f.Face.RecognitionType == FaceRecognitionType.Recognized)
+            .Select(f => new UserWithFace(Guid.Parse(f.Face.PersonId), f.FileId));
+
+        var tempUsers = faceAnalysisWithFiles
+            .Where(f => f.Face.RecognitionType == FaceRecognitionType.TempUser)
+            .Select(f => new UserWithFace(Guid.Parse(f.Face.PersonId), f.FileId));
+
+        var faceAnalysisEvent = new ImageFacesAnalyzedEvent
+        {
+            PostId = message.PostId,
+            ImageId = image.FileId,
+            GroupId = message.GroupId,
+            Users = recognizedUsers,
+            TempUser = tempUsers,
+        };
+
+        await _eventPublisher.PublishAsync(faceAnalysisEvent);
+    }
+
+    private async Task SaveImageToSearchServiceAsync(PostCreatedEvent message, FileResponse image)
+    {
+        try
+        {
+            var photoData = CreateFamilyPhotoData(message, image);
+            await _imageSearchService.SaveImageAsync(photoData, image.Stream, image.ContentType);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save image {ImageId} to search service for post {PostId}",
+                image.FileId, message.PostId);
+        }
+    }
+
+    private static FamilyPhoto CreateFamilyPhotoData(PostCreatedEvent message, FileResponse image)
+    {
+        return new FamilyPhoto
+        {
+            FileId = image.FileId,
+            Content = message.Content,
+            Title = message.Title,
+            GroupId = message.GroupId,
+            MemoryId = message.MemoryId,
+            PostId = message.PostId,
+            PublisherUserId = message.UserId,
+            CreatedAt = message.OccurredOn,
+        };
     }
 }

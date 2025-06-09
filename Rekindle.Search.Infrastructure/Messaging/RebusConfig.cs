@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Rebus.Config;
 using Rekindle.Memories.Contracts;
 using Rekindle.Search.Application;
+using Rekindle.Search.Application.Common.Messaging;
 
 namespace Rekindle.Search.Infrastructure.Messaging;
 
@@ -33,7 +34,7 @@ public static class RebusConfig
             }
         );
         services.AutoRegisterHandlersFromAssemblyOf<IApplicationAssemblyMarker>();
-        //services.AddTransient<IEventPublisher, RebusEventPublisher>();
+        services.AddTransient<IEventPublisher, RebusEventPublisher>();
 
         return services;
     }
