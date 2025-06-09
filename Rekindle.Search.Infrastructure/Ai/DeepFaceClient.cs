@@ -23,8 +23,7 @@ public class DeepFaceClient : IDeepFaceClient
     public async Task<FaceAddResponse> AddFacesFromImageAsync(Guid groupId, Stream imageStream,
         CancellationToken cancellationToken = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"add_faces");
-        imageStream.Position = 0;
+        var request = new HttpRequestMessage(HttpMethod.Post, $"api/add_faces");
         byte[] imageBytes;
         using (var memoryStream = new MemoryStream())
         {
@@ -57,7 +56,7 @@ public class DeepFaceClient : IDeepFaceClient
     public async Task<Stream> GetLatestFaceByUserIdAsync(Guid groupId, Guid userId,
         CancellationToken cancellationToken = default)
     {
-        var response = await _client.GetAsync($"groups/{groupId}/users/{userId}/last_image", cancellationToken);
+        var response = await _client.GetAsync($"api/groups/{groupId}/users/{userId}/last_image", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -84,7 +83,7 @@ public class DeepFaceClient : IDeepFaceClient
     public async Task MergeUsers(Guid groupId, IEnumerable<Guid> sourceUserIds, Guid targetUserId,
         CancellationToken cancellationToken = default)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, $"merge_users");
+        var request = new HttpRequestMessage(HttpMethod.Post, $"api/merge_users");
         var requestBody = new MergeUsersRequest(
             groupId.ToString(),
             sourceUserIds.Select(id => id.ToString()),

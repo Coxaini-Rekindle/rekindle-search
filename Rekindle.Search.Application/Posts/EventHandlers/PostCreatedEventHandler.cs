@@ -34,7 +34,14 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
     {
         var images = await GetImagesAsync(message.Images);
 
-        var processingTasks = images.Select(image => ProcessImageAsync(message, image));
+        var processingTasks = images.Select(async image =>
+        {
+            using var memoryStream = new MemoryStream();
+            await image.Stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+            var clonedImage = image with { Stream = memoryStream };
+            await ProcessImageAsync(message, clonedImage);
+        });
         await Task.WhenAll(processingTasks);
     }
 
@@ -46,11 +53,25 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
 
     private async Task ProcessImageAsync(PostCreatedEvent message, FileResponse image)
     {
-        await ProcessFaceAnalysisAsync(message, image);
-        await SaveImageToSearchServiceAsync(message, image);
+        using var faceAnalysisStream = new MemoryStream();
+        using var searchServiceStream = new MemoryStream();
+
+        image.Stream.Position = 0;
+        await image.Stream.CopyToAsync(faceAnalysisStream);
+        image.Stream.Position = 0;
+        await image.Stream.CopyToAsync(searchServiceStream);
+
+        faceAnalysisStream.Position = 0;
+        searchServiceStream.Position = 0;
+
+        var imageForFaces = image with { Stream = faceAnalysisStream };
+        var imageForSearch = image with { Stream = searchServiceStream };
+
+        var participantIds = await ProcessFaceAnalysisAsync(message, imageForFaces);
+        await SaveImageToSearchServiceAsync(message, imageForSearch, participantIds);
     }
 
-    private async Task ProcessFaceAnalysisAsync(PostCreatedEvent message, FileResponse image)
+    private async Task<IEnumerable<Guid>> ProcessFaceAnalysisAsync(PostCreatedEvent message, FileResponse image)
     {
         try
         {
@@ -62,11 +83,18 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
             {
                 _logger.LogInformation("No faces detected in image {ImageId} for post {PostId}",
                     image.FileId, message.PostId);
-                return;
+                return [];
             }
 
             var faceAnalysisWithFiles = await ProcessDetectedFacesAsync(faceAnalysis.Faces);
             await PublishFaceAnalysisEventAsync(message, image, faceAnalysisWithFiles);
+
+            var participantIds = faceAnalysisWithFiles
+                .Select(f => Guid.Parse(f.Face.PersonId))
+                .Distinct()
+                .ToList();
+
+            return participantIds;
         }
         catch (HttpRequestException ex)
         {
@@ -78,6 +106,8 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
             _logger.LogError(ex, "Unexpected error during face analysis for post {PostId}, image {ImageId}",
                 message.PostId, image.FileId);
         }
+
+        return [];
     }
 
     private async Task<List<(FaceResponse Face, Guid FileId)>> ProcessDetectedFacesAsync(
@@ -127,11 +157,12 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
         await _eventPublisher.PublishAsync(faceAnalysisEvent);
     }
 
-    private async Task SaveImageToSearchServiceAsync(PostCreatedEvent message, FileResponse image)
+    private async Task SaveImageToSearchServiceAsync(PostCreatedEvent message, FileResponse image,
+        IEnumerable<Guid> participantIds)
     {
         try
         {
-            var photoData = CreateFamilyPhotoData(message, image);
+            var photoData = CreateFamilyPhotoData(message, image, participantIds);
             await _imageSearchService.SaveImageAsync(photoData, image.Stream, image.ContentType);
         }
         catch (Exception ex)
@@ -141,7 +172,8 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
         }
     }
 
-    private static FamilyPhoto CreateFamilyPhotoData(PostCreatedEvent message, FileResponse image)
+    private static FamilyPhoto CreateFamilyPhotoData(PostCreatedEvent message, FileResponse image,
+        IEnumerable<Guid> participantIds)
     {
         return new FamilyPhoto
         {
@@ -153,6 +185,7 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
             PostId = message.PostId,
             PublisherUserId = message.UserId,
             CreatedAt = message.OccurredOn,
+            Participants = participantIds.ToList()
         };
     }
 }

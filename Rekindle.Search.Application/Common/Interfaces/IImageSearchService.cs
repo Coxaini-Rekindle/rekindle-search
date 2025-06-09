@@ -8,6 +8,7 @@ public interface IImageSearchService
 
     Task<IEnumerable<FamilyPhoto>> SearchImagesAsync(
         Guid groupId,
+        IEnumerable<Guid> participants,
         string query,
         ulong limit = 10,
         ulong offset = 0,

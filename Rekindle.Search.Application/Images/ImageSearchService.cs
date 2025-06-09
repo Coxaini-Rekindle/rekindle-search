@@ -38,16 +38,19 @@ public class ImageSearchService : IImageSearchService
 
     public async Task<IEnumerable<FamilyPhoto>> SearchImagesAsync(
         Guid groupId,
+        IEnumerable<Guid> participants,
         string query,
         ulong limit = 10,
         ulong offset = 0,
         CancellationToken ctx = default)
     {
+        ReadOnlyMemory<float>? embedding = null;
         // Step 1: Generate a vector embedding from the search query
-        var embedding = await _vectorEmbeddingGenerator.GenerateEmbeddingAsync(query, ctx);
+        if (!string.IsNullOrWhiteSpace(query))
+            embedding = await _vectorEmbeddingGenerator.GenerateEmbeddingAsync(query, ctx);
 
         // Step 2: Search for similar images in the database
-        var results = await _familyPhotosRepository.SearchPhotos(groupId, embedding, limit, offset, ctx);
+        var results = await _familyPhotosRepository.SearchPhotos(groupId, participants, embedding, limit, offset, ctx);
 
         _logger.LogInformation("Found {Count} images matching query '{Query}'", results.Count, query);
 
