@@ -33,16 +33,14 @@ public class PostCreatedEventHandler : IHandleMessages<PostCreatedEvent>
     public async Task Handle(PostCreatedEvent message)
     {
         var images = await GetImagesAsync(message.Images);
-
-        var processingTasks = images.Select(async image =>
+        foreach (var image in images)
         {
             using var memoryStream = new MemoryStream();
             await image.Stream.CopyToAsync(memoryStream);
             memoryStream.Position = 0;
             var clonedImage = image with { Stream = memoryStream };
             await ProcessImageAsync(message, clonedImage);
-        });
-        await Task.WhenAll(processingTasks);
+        }
     }
 
     private async Task<IEnumerable<FileResponse>> GetImagesAsync(IEnumerable<Guid> imageIds)
